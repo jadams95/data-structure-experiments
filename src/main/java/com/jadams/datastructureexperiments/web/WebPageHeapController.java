@@ -1,82 +1,91 @@
 package com.jadams.datastructureexperiments.web;
 
 import com.jadams.datastructureexperiments.domain.HeapQueue;
+import com.jadams.datastructureexperiments.domain.HuffmanObj;
+import com.jadams.datastructureexperiments.services.AntlrService;
+import com.jadams.datastructureexperiments.services.HtmlParser;
 import com.jadams.datastructureexperiments.services.WebScannerService;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATN;
-import org.antlr.v4.runtime.atn.ATNType;
-import org.antlr.v4.runtime.atn.LexerATNSimulator;
-import org.antlr.v4.runtime.tree.Tree;
-import org.apache.tomcat.util.json.JSONParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.apache.tomcat.util.json.JSONParser;
+import jakarta.annotation.Nullable;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.channels.ReadableByteChannel;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.stream;
 
 @RestController
 public class WebPageHeapController {
+
+
+//    Logger loggerFactory = LoggerFactory.getLogger(We)
     @Autowired
     private WebScannerService webScannerService;
 
-
-//    @Autowired
-//    Environment environment;
-    Logger logger = LoggerFactory.getLogger(WebPageHeapController.class);
-
+    @Autowired
+    private AntlrService antlrService;
 
     @GetMapping(value = "/source", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> webPageGetSourceController(@RequestBody String domain) throws MalformedURLException, URISyntaxException {
         String urlResponse = webScannerService.getForObjects(domain);
         HeapQueue heapQueue = new HeapQueue(urlResponse);
-        logger.info("Logging heap queue object out after creation and heapify: \n" + heapQueue.toString());
         return new ResponseEntity<>(heapQueue.toString(), HttpStatus.OK);
     }
 
-
-    @Deprecated
     @GetMapping(value = "/flip-tree", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> webPageGetFlipTreeController(@RequestBody String domain) throws IOException, URISyntaxException {
+       String urlResponse = webScannerService.getForObjects(domain);
+       HeapQueue heapQueue = new HeapQueue(urlResponse);
+       heapQueue.flipTree();
 
-        String urlResponse = webScannerService.getForObjects(domain);
-        // creates Heap tree
-        HeapQueue heapQueue = new HeapQueue(urlResponse);
-        heapQueue.flipTree();
-        int ch = 0x10FFFF;
-        String s = new String(Character.toChars(ch));
 
-        logger.info("UTF Character at 65536" + s);
-//        var inputStream = CharStreams.fromString(heapQueue.toString());
-//        var test = new ATN(ATNType.LEXER, Character.getNumericValue(65536));
-//
-//        BufferedTokenStream bufferedTokenStream = new CommonTokenStream().setTokenSource();
-//
-//
-//
-//
-//
-//        LexerInterpreter lexerInterpreter = new LexerInterpreter("testhtml.g4",
-//              test, inputStream);
-//        logger.info("Logging heap queue object out after creation and heapify: \n" + Arrays.toString(lexerInterpreter._text.getBytes()));
-        return new ResponseEntity<>(heapQueue.toString(), HttpStatus.OK);
+       @Nullable
+       HtmlParser.DocumentContext documentContext = antlrService.parseHtml(heapQueue.toString());
+       char[] value = "JT".toCharArray();
+       assert documentContext != null;
+       char[] elementChars = documentContext.getText().toCharArray();
+       arraycopy(value, 0, elementChars, 0, 2);
+       return new ResponseEntity<>(Arrays.toString(elementChars), HttpStatus.OK);
     }
 
 
+    @GetMapping(value = "/display-character-frequency-table", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<?> displayCharacterFrequencyTable(@RequestBody String domain) throws MalformedURLException, URISyntaxException {
+        String urlResponse = webScannerService.getForObjects(domain);
+        HeapQueue heapQueue = new HeapQueue(urlResponse);
+        heapQueue.flipTree();
 
+
+        @Nullable
+        HtmlParser.DocumentContext documentContext = antlrService.parseHtml(heapQueue.toString());
+        char[] value = "JT".toCharArray();
+        assert documentContext != null;
+        char[] elementChars = documentContext.getText().toCharArray();
+        arraycopy(value, 0, elementChars, 0, 2);
+        String newHtmlPage = new String(elementChars);
+        char[] huffmanArr = newHtmlPage.toCharArray();
+        HuffmanObj huffmanObj;
+        for(int i = 0; i < huffmanArr.length - 1; i++) {
+            int count = 0;
+            if(huffmanArr[i] == huffmanArr[i+1]){
+                count++;
+                huffmanObj = new HuffmanObj(huffmanArr[i], count);
+            }else {
+                int initialCounter = 1;
+                huffmanObj = new HuffmanObj(huffmanArr[i], count);
+            }
+        }
+        HuffmanObj huffmanObj1 = HuffmanObj.HuffmanCoding.buildHuffmanTree(Arrays.toString(huffmanArr));
+        return new ResponseEntity<>(huffmanObj1.toString(), HttpStatus.OK);    }
 
 }

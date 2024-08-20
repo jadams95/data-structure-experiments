@@ -1,6 +1,4 @@
 package com.jadams.datastructureexperiments.domain;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +22,19 @@ public class HeapQueue {
     private int heapSize;
 
     public HeapQueue(String webPage) {
+
+
+
         List<WebElement> elements = new ArrayList<>();
         boolean isInBody = false;
-
         // Regular expressions to identify semantic tags
         String[] semanticTags = {"article", "section", "nav", "aside", "header", "footer", "div"};
+
+
+
+
+
+
 
         int i = 0;
         while (i < webPage.length()) {

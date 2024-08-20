@@ -11,30 +11,4 @@ import java.util.Arrays;
 
 @RestController
 public class AlgorithmController {
-
-
-
-    @GetMapping("/bubble")
-    public Integer[] bubbleSortController(@RequestBody String intStrCharacters){
-
-        String[] listOfItems = intStrCharacters.replaceAll("\\[", "").replaceAll("]", "").replaceAll(" ", "").split(",");
-
-        Integer[] listOfIntgers = new Integer[listOfItems.length];
-        Arrays.stream(listOfItems).forEach(x -> System.out.println(x));
-        int x = 0;
-            for(int i = 0; i < listOfItems.length; i++){
-
-                listOfIntgers[i] = Integer.valueOf(listOfItems[i]);
-//                if(Character.isDigit(Integer.parseInt(listOfItems[i]))){
-//
-//                    x++;
-//                }
-            }
-
-        return listOfIntgers;
-    }
-
-
-
-
 }
